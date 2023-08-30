@@ -40,13 +40,14 @@ class Decoder(object):
                 result.append(np.fromiter(map(bytes.decode, data), float))
         return np.array(result)
 
-    def fromzip(self, pwd=None, dir=None, names=None) -> np.ndarray:
+    def fromzip(self, pwd=None, dir=None, names=None) -> list[np.ndarray]:
         if dir is None:
             dir = self.__directory__
         if names is None:
             names = self.__names__
         else:
             names = self.setnames(names)
+        tmp = []
         result = []
         for name in names:
             if name.split('/')[-1] in os.listdir(dir) and zf.is_zipfile(name):
@@ -54,6 +55,8 @@ class Decoder(object):
                     for file in zip.infolist():
                         if not file.is_dir():
                             with zip.open(file, pwd=pwd) as vector:
-                                result.append(np.fromiter(vector, float))
-
-        return np.array(result)
+                                tmp.append(np.fromiter(vector, float))
+                result.append(np.array(tmp))
+                tmp.clear()
+                tmp = []
+        return result
