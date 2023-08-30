@@ -6,9 +6,12 @@ import sys
 
 
 class Decoder(object):
-    def __init__(self, names: list[str] | type[str] | str, directory: str = '.') -> None:
+    def __init__(self, names: list[str] | type[str] | str = None, directory: str = '.') -> None:
         self.__directory__ = self.setdir(directory)
-        self.__names__ = self.setnames(names)
+        if names:
+            self.__names__ = self.setnames(names)
+        else:
+            self.__names__ = None
 
     def setdir(self, directory: list[str] | type[str] | str = '.') -> str:
         self.__directory__ = directory + '/' * \
@@ -26,14 +29,16 @@ class Decoder(object):
             raise ValueError('Names can only be list, tuple')
         return self.__names__
 
-    def fromdir(self) -> np.ndarray:
+    def fromdir(self, dir: str = None) -> np.ndarray:
+        if dir is None:
+            dir = self.__directory__
         result = []
-        for name in os.listdir(self.__directory__):
-            result.append([])
+        self.__names__ = self.setnames(os.listdir(dir))
+        for name in self.__names__:
             with open(name, 'rb') as file:
                 data = file.readlines()
-                result[-1].extend(np.fromiter(map(bytes.decode, data)))
-        return result
+                result.append(np.fromiter(map(bytes.decode, data), float))
+        return np.array(result)
     # def fromzip(self, pwd=None) -> np.ndarray:
     #     for name in self.__names__:
     #         if name.split('/')[-1] in os.listdir(self.__directory__) and zf.is_zipfile(name):
@@ -45,7 +50,7 @@ class Decoder(object):
     #     return self.result
 
 
-test = Decoder('norm.zip', 'database/unpack norm')
+test = Decoder('norm.zip', '../datasets/unpack norm')
 print(test.fromdir())
 
 # directory = input('Enter archives directory:\t').strip()
